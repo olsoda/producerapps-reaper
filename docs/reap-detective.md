@@ -52,8 +52,19 @@ shortcuts. They use the settings last set in the window, so they work with it cl
      ghost notes.
    - **Retrigger**: the flam window. Onsets closer than this become one hit, whether they're
      on one track (a snare flam) or across key tracks (kick and snare played a few ms apart).
-     The split goes before the first onset. *Quantize anchor* picks which onset lands on the
-     grid: the first, or the loudest (the main stroke of a flam).
+     The split always goes before the first onset.
+   - **Anchor**: which onset of a merged hit Quantize puts on the grid.
+     - *Track priority* (default): the onset from the highest-priority key track. If the
+       drummer flams kick and snare, the snare lands on the grid. Within that track, the
+       loudest onset wins, so a snare flam's main stroke counts rather than its grace note.
+       The **Priority** button next to it shows the top track and opens a list to reorder the
+       key tracks. The default is snare, then kick, then toms, then the rest (guessed from
+       the track names). Your order is saved with the project.
+     - *Loudest onset*: the loudest onset, from any track.
+     - *First onset*: the earliest one.
+
+     Set the anchor before Separate: each slice keeps the anchor it was separated with. In
+     the waveform view, hovering a merged hit shows which track it's anchored on.
    - **Per-track offsets**: compensate for a tom that picks up lots of bleed.
 3. Fix the hits in the **arrange view**. With **In arrange** set to *Lines* (the default), every
    hit is an amber line across exactly the tracks Separate will cut, while the Detect or

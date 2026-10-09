@@ -1,8 +1,10 @@
 -- @description Reap Detective: Beat Detective-style multitrack drum editing
 -- @author ProducerApps
--- @version 0.1.0
+-- @version 0.2.0
 -- @changelog
---   Initial release.
+--   Track priority anchor: when hits on several key tracks merge into one (e.g. a kick/snare
+--   flam), the onset from the highest-priority track goes on the grid. Snare, then kick, then
+--   toms by default; reorder with the Priority button next to Anchor. Now the default anchor.
 -- @link https://github.com/olsoda/producerapps-reaper/blob/main/docs/reap-detective.md
 -- @about
 --   # Reap Detective
@@ -167,6 +169,10 @@ local function start_analysis()
     local p = prev[kt.guid]
     if p then kt.offset, kt.enabled = p.offset, p.enabled else same = false end
   end
+  local _, saved = r.GetProjExtState(0, 'ReapDetective', 'priority')
+  local guids = {}
+  for g in (saved or ''):gmatch('%S+') do guids[#guids + 1] = g end
+  A.set_priority(an, guids)
   if not same or st.separated then st.edits = core.new_edits() end
   st.separated = false
   st.an, st.auto, st.hits, st.by_key, st.sel = an, {}, {}, {}, nil
@@ -771,8 +777,11 @@ local function draw_view(h)
     local info = ('%s  ·  %s'):format(fmt_bars(tm), fmt_pos(tm))
     if hov_i then
       local h_ = st.hits[hov_i]
-      info = ('hit %d of %d  ·  %s%s  ·  '):format(hov_i, #st.hits, h_.kind,
-        (h_.n or 1) > 1 and (', %d onsets'):format(h_.n) or '') .. info
+      local anchored = ''
+      if (h_.n or 1) > 1 and h_.anchor_tr and st.an.tracks[h_.anchor_tr] then
+        anchored = (', %d onsets, on the grid: %s'):format(h_.n, st.an.tracks[h_.anchor_tr].name)
+      end
+      info = ('hit %d of %d  ·  %s%s  ·  '):format(hov_i, #st.hits, h_.kind, anchored) .. info
     end
     st.view_info = info
   end
@@ -858,6 +867,50 @@ local function arrange_guide()
   U.hint('Lines show on every track Separate will cut. Elsewhere, the mouse works as usual.')
 end
 
+-- Track priority for the "Track priority" anchor: a button showing the top track, and a
+-- popup to reorder the key tracks. The order is saved with the project.
+local function priority_button()
+  local list = st.an and A.by_priority(st.an) or {}
+  local label = #list > 0 and ('Priority: %s'):format(U.truncate(list[1].name, 110)) or 'Priority'
+  U.flow(ImGui.CalcTextSize(ctx, label) + 24)
+  ImGui.BeginDisabled(ctx, #list == 0)
+  if U.secondary(label .. '##prio') then ImGui.OpenPopup(ctx, 'priority') end
+  ImGui.EndDisabled(ctx)
+  if #list > 0 then
+    local names = {}
+    for i, kt in ipairs(list) do names[i] = kt.name end
+    tip('Order: ' .. table.concat(names, '  >  ') .. '\nClick to change it.')
+  else
+    tip('Analyze first to set the priority of the key tracks.')
+  end
+  if ImGui.BeginPopup(ctx, 'priority') then
+    U.section('Track priority', true)
+    U.text3('Highest first. In a merged hit, the onset from the')
+    U.text3('highest track lands on the grid.')
+    ImGui.Dummy(ctx, 0, U.SP.xs)
+    for i, kt in ipairs(list) do
+      ImGui.PushID(ctx, kt.guid)
+      ImGui.AlignTextToFramePadding(ctx)
+      U.text3(tostring(i))
+      ImGui.SameLine(ctx, 28)
+      U.text(U.truncate(kt.name, 170), kt.enabled and U.C.text or U.C.text3)
+      ImGui.SameLine(ctx, 212)
+      for _, b in ipairs({ { '▲', -1, i == 1 }, { '▼', 1, i == #list } }) do
+        if b[2] > 0 then ImGui.SameLine(ctx) end
+        ImGui.BeginDisabled(ctx, b[3])
+        if ImGui.Button(ctx, b[1], 28) then
+          local guids = A.move_priority(st.an, kt, b[2])
+          r.SetProjExtState(0, 'ReapDetective', 'priority', table.concat(guids, ' '))
+          run_detection()
+        end
+        ImGui.EndDisabled(ctx)
+      end
+      ImGui.PopID(ctx)
+    end
+    ImGui.EndPopup(ctx)
+  end
+end
+
 local function tab_detect()
   local cand = selected_key_tracks()
   local differs = #cand > 0 and not (st.an and same_tracks(cand, st.an.tracks))
@@ -875,8 +928,15 @@ local function tab_detect()
     'How sharply the level must jump (within 5 ms) to count as a hit.\nLower finds ghost notes; higher keeps only strong attacks.', detect_soon)
   tslider('Retrigger', 'retrig_ms', 0, 150, '%.0f ms', 120,
     'Flam window: onsets closer than this become one hit, on the same track and across\nkey tracks (kick and snare played slightly apart). The split goes before the first.', detect_soon)
-  tcombo('Anchor', 'anchor', 'First onset\0Loudest onset\0', false, 128,
-    'Which onset of a merged hit lands on the grid when quantizing.\nLoudest = the main stroke of a flam.', detect_soon)
+  tcombo('Anchor', 'anchor', 'First onset\0Loudest onset\0Track priority\0', false, 136,
+    'Which onset of a merged hit lands on the grid when quantizing (the cut always\n' ..
+    'goes before the first onset):\n' ..
+    '  First onset: the earliest one.\n' ..
+    '  Loudest onset: the main stroke of a flam.\n' ..
+    '  Track priority: the onset from the highest-priority track, e.g. snare over kick\n' ..
+    '  when the drummer flams them; the loudest one if that track has several.\n' ..
+    'Set this before Separate: each slice keeps the anchor it was separated with.', detect_soon)
+  if cfg.anchor == 2 then priority_button() end
   tcombo('In arrange', 'arrange_view', O.available and 'Off\0Lines\0Markers\0'
     or 'Off\0Lines (needs js_ReaScriptAPI)\0Markers\0', false, 104,
     'Show the hits in REAPER\'s arrange view. Lines cover every track Separate will cut\n' ..

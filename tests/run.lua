@@ -451,5 +451,46 @@ do
   check(E.restore_legacy_colors() == 0, 'legacy: second run does nothing')
 end
 
+do
+  -- track priority: snare (tr 2) outranks kick (tr 1) when the drummer flams them
+  local rank = { [1] = 2, [2] = 1 }
+  local function onsets()
+    return {
+      { t = 1.000, lvl = -2, tr = 1 }, { t = 1.012, lvl = -6, tr = 2 },      -- kick early, snare late
+      { t = 2.000, lvl = -14, tr = 2 }, { t = 2.005, lvl = -1, tr = 1 },     -- snare grace, kick,
+      { t = 2.018, lvl = 0, tr = 2 },                                         -- snare main stroke
+      { t = 3.000, lvl = -3, tr = 1 }, { t = 3.010, lvl = -9, tr = 3 },      -- kick + unranked track
+    }
+  end
+  local h = core.merge(onsets(), 0.03, 'priority', rank)
+  check(#h == 3, 'priority: 3 hits')
+  near(h[1].t, 1.000, 1e-9, 'priority: still split before the earliest onset (kick)')
+  near(h[1].a, 1.012, 1e-9, 'priority: snare onset goes on the grid')
+  check(h[1].anchor_tr == 2, 'priority: anchor track recorded')
+  near(h[2].a, 2.018, 1e-9, 'priority: loudest snare onset wins (main stroke, not the grace note)')
+  near(h[3].a, 3.000, 1e-9, 'priority: ranked track beats an unranked one')
+  near(core.merge(onsets(), 0.03, 'loudest', rank)[1].a, 1.000, 1e-9, 'loudest mode unchanged')
+  near(core.merge(onsets(), 0.03, 'first')[2].a, 2.000, 1e-9, 'first mode unchanged')
+
+  local names = { 'Kick In', 'Snare Top', 'Rack Tom', 'OH L', 'Snare Bottom', 'Kik Out', 'SN', 'Hat_02', 'Ensemble' }
+  local order = core.default_priority(names)
+  local got = {}
+  for i, k in ipairs(order) do got[i] = names[k] end
+  check(table.concat(got, ',') == 'Snare Top,Snare Bottom,SN,Kick In,Kik Out,Rack Tom,OH L,Hat_02,Ensemble',
+    'default priority: ' .. table.concat(got, ','))
+
+  local A = require 'reapdetective.analysis'
+  local an = { tracks = {
+    { name = 'Kick_02', guid = '{K}' }, { name = 'Snare_02', guid = '{S}' }, { name = 'Fl Tom_02', guid = '{T}' } } }
+  A.set_priority(an, nil)
+  check(an.tracks[2].priority == 1 and an.tracks[1].priority == 2 and an.tracks[3].priority == 3, 'set_priority: default order')
+  A.set_priority(an, { '{T}', '{K}' })
+  check(an.tracks[3].priority == 1 and an.tracks[1].priority == 2 and an.tracks[2].priority == 3, 'set_priority: saved order first')
+  local guids = A.move_priority(an, an.tracks[2], -1)
+  check(table.concat(guids, ' ') == '{T} {S} {K}', 'move_priority: ' .. table.concat(guids, ' '))
+  A.move_priority(an, an.tracks[3], -1)
+  check(an.tracks[3].priority == 1, 'move_priority: the top track cannot move up')
+end
+
 print(('%d passed, %d failed'):format(passed, failed))
 os.exit(failed == 0 and 0 or 1)

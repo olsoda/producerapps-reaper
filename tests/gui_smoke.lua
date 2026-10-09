@@ -108,6 +108,9 @@ local function mouse_down_at(x)   -- the OS delivers a button-down to the arrang
 end
 
 function R.GetAppVersion() return '7.82/mock' end
+local proj_ext = {}
+function R.GetProjExtState(_, sec, key) local v = proj_ext[sec .. '/' .. key]; return v and 1 or 0, v or '' end
+function R.SetProjExtState(_, sec, key, v) proj_ext[sec .. '/' .. key] = v; return 1 end
 local state_count = 0
 function R.GetProjectStateChangeCount() state_count = state_count + 1; return state_count end
 function R.GetOS() return 'macOS-arm64' end
@@ -163,6 +166,7 @@ local fns = {
   CreateContext = function() return {} end,
   Begin = function() return true, not frame.close end,
   BeginTabBar = function() return true end,
+  BeginPopup = function(_, id) return frame.popup == id end,
   BeginTabItem = function(_, label) return label:find(frame.tab or active_tab, 1, true) ~= nil end,
   BeginChild = function() return true end, BeginTable = function() return true end,
   Button = function(_, label) return frame.press == label end,
@@ -283,6 +287,11 @@ run({ down = true, dragging = true, mx = x_first + 2 })
 run({ mx = x_first + 2 })
 run({ wheel = 1, mx = 300 })
 run({ key = ImGui.Key_F })
+
+-- track priority popup: Snare first by default; move Kick up
+run({ popup = 'priority' })
+assert(logged('TRACK PRIORITY'), 'priority popup not drawn')
+assert(logged('Snare'), 'priority popup should list the key tracks')
 
 -- edit hits in the arrange view (waveform view off): 200 px/s, view starts at 0 s
 run({ toggle = 'Waveforms here' })

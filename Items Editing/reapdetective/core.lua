@@ -142,27 +142,76 @@ end
 -- Merging (retrigger / flam window across tracks)
 ----------------------------------------------------------------------------------------
 
--- onsets: list of { t, lvl, tr }. win: seconds. anchor: 'first' | 'loudest'
--- A hit absorbs every onset that starts within `win` of the hit's first onset.
-function M.merge(onsets, win, anchor)
+-- onsets: list of { t, lvl, tr }. win: seconds.
+-- anchor: which onset of a merged hit gets quantized:
+--   'first'    the earliest onset
+--   'loudest'  the loudest onset (the main stroke of a flam)
+--   'priority' the onset from the highest-priority track in the hit (rank[tr], 1 = highest;
+--              tracks without a rank come last), the loudest one if that track has several
+-- A hit absorbs every onset that starts within `win` of the hit's first onset; it is always
+-- split before its first onset. Each hit records the track its anchor came from (anchor_tr).
+function M.merge(onsets, win, anchor, rank)
   table.sort(onsets, function(x, y) return x.t < y.t end)
   local hits, cur = {}, nil
+  local function consider(o)
+    if o.lvl > cur.lvl then cur.lvl, cur.loud_t, cur.loud_tr = o.lvl, o.t, o.tr end
+    local rk = rank and rank[o.tr] or math.huge
+    if rk < cur.prank or (rk == cur.prank and o.lvl > cur.plvl) then
+      cur.prank, cur.plvl, cur.prio_t, cur.prio_tr = rk, o.lvl, o.t, o.tr
+    end
+  end
   for i = 1, #onsets do
     local o = onsets[i]
     if cur and o.t - cur.t < win then
       cur.n = cur.n + 1
       cur.tracks[o.tr] = true
-      if o.lvl > cur.lvl then cur.lvl, cur.loud_t = o.lvl, o.t end
+      consider(o)
     else
-      cur = { t = o.t, loud_t = o.t, lvl = o.lvl, n = 1, tracks = { [o.tr] = true }, tr = o.tr }
+      cur = { t = o.t, lvl = -math.huge, prank = math.huge, plvl = -math.huge, n = 1,
+              tracks = { [o.tr] = true }, tr = o.tr }
+      consider(o)
       hits[#hits + 1] = cur
     end
   end
   for i = 1, #hits do
     local h = hits[i]
-    h.a = (anchor == 'loudest') and h.loud_t or h.t
+    if anchor == 'loudest' then
+      h.a, h.anchor_tr = h.loud_t, h.loud_tr
+    elseif anchor == 'priority' then
+      h.a, h.anchor_tr = h.prio_t, h.prio_tr
+    else
+      h.a, h.anchor_tr = h.t, h.tr
+    end
   end
   return hits
+end
+
+-- Default track priority from names: snare, then kick, then toms, then everything else
+-- (in track order). Returns a list of indices into `names`, highest priority first.
+M.PRIORITY_CLASSES = {
+  { 'snare', '^sn[%s_%-%d]', '^sn$', '[%s_%-]sn[%s_%-%d]', '[%s_%-]sn$', 'sd[%s_%-%d]' },
+  { 'kick', 'kik', '^bd[%s_%-%d]', '^bd$', 'bass ?drum' },
+  { 'tom' },
+}
+
+function M.default_priority(names)
+  local function class(name)
+    local n = name:lower()
+    for c, pats in ipairs(M.PRIORITY_CLASSES) do
+      for _, pat in ipairs(pats) do
+        if n:find(pat) then return c end
+      end
+    end
+    return #M.PRIORITY_CLASSES + 1
+  end
+  local order = {}
+  for i = 1, #names do order[i] = i end
+  table.sort(order, function(x, y)
+    local cx, cy = class(names[x]), class(names[y])
+    if cx ~= cy then return cx < cy end
+    return x < y
+  end)
+  return order
 end
 
 ----------------------------------------------------------------------------------------
@@ -191,7 +240,7 @@ function M.apply_edits(auto_hits, edits, tol)
     local h = auto_hits[i]
     if not find_near(edits.dels, h.t, nil, tol) then
       local mi = find_near(edits.moves, h.t, 'from', tol)
-      local o = { t = h.t, a = h.a, lvl = h.lvl, tr = h.tr, n = h.n, orig = h.t,
+      local o = { t = h.t, a = h.a, lvl = h.lvl, tr = h.tr, n = h.n, orig = h.t, anchor_tr = h.anchor_tr,
                   key = ('a:%.6f'):format(h.t), kind = 'auto' }
       if mi then
         local m = edits.moves[mi]

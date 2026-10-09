@@ -34,7 +34,7 @@ S.defaults = {
   thr_db       = -30,    -- dB below each key track's peak
   sens_db      = 8,      -- minimum rise (dB) within 5 ms
   retrig_ms    = 30,     -- flam / retrigger window, within and across key tracks
-  anchor       = 1,      -- 0 = first onset of hit, 1 = loudest onset of hit
+  anchor       = 2,      -- onset that gets quantized: 0 first, 1 loudest, 2 highest-priority track
   arrange_view = 1,      -- show hits in the arrange view: 0 off, 1 lines (js_ReaScriptAPI), 2 markers
   window_view  = false,  -- also show the waveform/hit view inside the script window
   -- separation
@@ -69,8 +69,8 @@ end
 
 -- Bump VERSION when defaults change; keys listed for a version are reset to the new
 -- default once for settings saved by an older version.
-S.VERSION = 2
-S.RESET_ON_UPGRADE = { [2] = { 'max_move', 'xfade_ms', 'fade_shape' } }
+S.VERSION = 3
+S.RESET_ON_UPGRADE = { [2] = { 'max_move', 'xfade_ms', 'fade_shape' }, [3] = { 'anchor' } }
 
 function S.load()
   local cfg = {}

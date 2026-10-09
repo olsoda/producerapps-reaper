@@ -40,7 +40,49 @@ function A.new(tracks, rs, re)
       enabled = true, offset = 0, refine_cache = {}, count = 0,
     }
   end
+  A.set_priority(an, nil)
   return an
+end
+
+A.ANCHORS = { [0] = 'first', [1] = 'loudest', [2] = 'priority' }
+
+-- Assign priority ranks (1 = highest). `guids` is a saved order (list of track GUIDs):
+-- those tracks come first in that order, the rest follow the default (snare, kick, toms...).
+function A.set_priority(an, guids)
+  local names = {}
+  for i, kt in ipairs(an.tracks) do names[i] = kt.name end
+  local order, used = {}, {}
+  for _, g in ipairs(guids or {}) do
+    for i, kt in ipairs(an.tracks) do
+      if kt.guid == g and not used[i] then order[#order + 1] = i; used[i] = true end
+    end
+  end
+  for _, i in ipairs(core.default_priority(names)) do
+    if not used[i] then order[#order + 1] = i end
+  end
+  for rank, i in ipairs(order) do an.tracks[i].priority = rank end
+end
+
+-- Key tracks sorted by priority (highest first).
+function A.by_priority(an)
+  local list = {}
+  for _, kt in ipairs(an.tracks) do list[#list + 1] = kt end
+  table.sort(list, function(x, y) return x.priority < y.priority end)
+  return list
+end
+
+-- Swap a track's rank with its neighbor (dir = -1 up, 1 down). Returns the new GUID order.
+function A.move_priority(an, kt, dir)
+  local list = A.by_priority(an)
+  for i, k in ipairs(list) do
+    if k == kt and list[i + dir] then
+      list[i], list[i + dir] = list[i + dir], list[i]
+      break
+    end
+  end
+  local guids = {}
+  for rank, k in ipairs(list) do k.priority = rank; guids[rank] = k.guid end
+  return guids
 end
 
 function A.destroy(an)
@@ -129,7 +171,7 @@ local function refine(kt, o)
 end
 
 -- Run detection on every enabled key track and merge into hits.
--- p = { thr, sens, retrig, anchor }
+-- p = { thr, sens, retrig, anchor } (anchor: 0 first, 1 loudest, 2 track priority)
 function A.detect(an, p)
   local onsets = {}
   for ti, kt in ipairs(an.tracks) do
@@ -142,7 +184,9 @@ function A.detect(an, p)
       end
     end
   end
-  local hits = core.merge(onsets, p.retrig, p.anchor == 1 and 'loudest' or 'first')
+  local rank = {}
+  for ti, kt in ipairs(an.tracks) do rank[ti] = kt.priority end
+  local hits = core.merge(onsets, p.retrig, A.ANCHORS[p.anchor] or 'loudest', rank)
   local counts = {}
   for _, kt in ipairs(an.tracks) do
     counts[#counts + 1] = ('%s=%d%s'):format(kt.name, kt.count, kt.enabled and '' or '(off)')
