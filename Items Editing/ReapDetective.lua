@@ -3,7 +3,7 @@
 -- @version 0.1.0
 -- @changelog
 --   Initial release.
--- @link https://github.com/olsoda/reap-detective
+-- @link https://github.com/olsoda/producerapps-reaper/blob/main/docs/reap-detective.md
 -- @about
 --   # Reap Detective
 --
