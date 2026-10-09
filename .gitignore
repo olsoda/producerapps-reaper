@@ -1,0 +1,7 @@
+.DS_Store
+debug.log
+# local dev hooks
+.devui
+.devtest
+.autoanalyze
+.probe_keys

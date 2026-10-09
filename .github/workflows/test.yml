@@ -1,0 +1,13 @@
+name: test
+on: [push, pull_request]
+jobs:
+  lua:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Lua 5.4
+        run: sudo apt-get update && sudo apt-get install -yy lua5.4
+      - name: Unit and workflow tests
+        run: lua5.4 tests/run.lua
+      - name: Window smoke test
+        run: lua5.4 tests/gui_smoke.lua
