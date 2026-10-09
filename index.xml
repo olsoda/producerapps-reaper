@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<index version="1" name="Reap Detective" commit="94716be70efdf3f420d26e70268207862f1deaf6">
+  <category name="Items Editing">
+    <reapack name="ReapDetective.lua" type="script" desc="Reap Detective: Beat Detective-style multitrack drum editing">
+      <metadata>
+        <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel0 \b \fs36 Reap Detective\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Beat Detective-style editing for multitrack drums in REAPER.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 1.\tx360\tab {\b Detect}: find the hits on your key tracks (kick, snare, toms), with a flam window that merges onsets within and across tracks. Fix hits by dragging, adding and deleting them directly in the arrange view.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 2.\tx360\tab {\b Separate}: split the key tracks plus any other tracks (overheads, rooms...) at every hit, a trigger pad before each transient, with tails trimmed so slices can move. Every slice is grouped across tracks.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 3.\tx360\tab {\b Quantize}: snap slices to the grid; far moves and collisions are listed for review.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 4.\tx360\tab {\b Smooth}: fill the gaps and crossfade every boundary, with the fade placed before the transient and without replaying the next hit.\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Requires {\b ReaImGui} and {\b js_ReaScriptAPI} (both in the ReaTeam Extensions repository).\par}
+}
+]]></description>
+        <link rel="website">https://github.com/olsoda/reap-detective</link>
+      </metadata>
+      <version name="0.1.0" author="ProducerApps" time="2026-10-09T03:44:49Z">
+        <changelog><![CDATA[Initial release.]]></changelog>
+        <source main="main">https://github.com/olsoda/reap-detective/raw/94716be70efdf3f420d26e70268207862f1deaf6/Items%20Editing/ReapDetective.lua</source>
+        <source file="reapdetective/analysis.lua">https://github.com/olsoda/reap-detective/raw/94716be70efdf3f420d26e70268207862f1deaf6/Items%20Editing/reapdetective/analysis.lua</source>
+        <source file="reapdetective/arrange.lua">https://github.com/olsoda/reap-detective/raw/94716be70efdf3f420d26e70268207862f1deaf6/Items%20Editing/reapdetective/arrange.lua</source>
+        <source file="reapdetective/core.lua">https://github.com/olsoda/reap-detective/raw/94716be70efdf3f420d26e70268207862f1deaf6/Items%20Editing/reapdetective/core.lua</source>
+        <source file="reapdetective/edit.lua">https://github.com/olsoda/reap-detective/raw/94716be70efdf3f420d26e70268207862f1deaf6/Items%20Editing/reapdetective/edit.lua</source>
+        <source file="reapdetective/keys.lua">https://github.com/olsoda/reap-detective/raw/94716be70efdf3f420d26e70268207862f1deaf6/Items%20Editing/reapdetective/keys.lua</source>
+        <source file="reapdetective/overlay.lua">https://github.com/olsoda/reap-detective/raw/94716be70efdf3f420d26e70268207862f1deaf6/Items%20Editing/reapdetective/overlay.lua</source>
+        <source file="reapdetective/settings.lua">https://github.com/olsoda/reap-detective/raw/94716be70efdf3f420d26e70268207862f1deaf6/Items%20Editing/reapdetective/settings.lua</source>
+        <source file="reapdetective/ui.lua">https://github.com/olsoda/reap-detective/raw/94716be70efdf3f420d26e70268207862f1deaf6/Items%20Editing/reapdetective/ui.lua</source>
+        <source main="main" file="ReapDetective - Quantize slices.lua">https://github.com/olsoda/reap-detective/raw/94716be70efdf3f420d26e70268207862f1deaf6/Items%20Editing/ReapDetective%20-%20Quantize%20slices.lua</source>
+        <source main="main" file="ReapDetective - Smooth (fill gaps and crossfade).lua">https://github.com/olsoda/reap-detective/raw/94716be70efdf3f420d26e70268207862f1deaf6/Items%20Editing/ReapDetective%20-%20Smooth%20(fill%20gaps%20and%20crossfade).lua</source>
+        <source main="main" file="ReapDetective - Go to next flagged slice.lua">https://github.com/olsoda/reap-detective/raw/94716be70efdf3f420d26e70268207862f1deaf6/Items%20Editing/ReapDetective%20-%20Go%20to%20next%20flagged%20slice.lua</source>
+        <source main="main" file="ReapDetective - Go to previous flagged slice.lua">https://github.com/olsoda/reap-detective/raw/94716be70efdf3f420d26e70268207862f1deaf6/Items%20Editing/ReapDetective%20-%20Go%20to%20previous%20flagged%20slice.lua</source>
+        <source main="main" file="ReapDetective - Clear review flags.lua">https://github.com/olsoda/reap-detective/raw/94716be70efdf3f420d26e70268207862f1deaf6/Items%20Editing/ReapDetective%20-%20Clear%20review%20flags.lua</source>
+      </version>
+    </reapack>
+  </category>
+</index>
