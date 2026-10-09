@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<index version="1" name="Reap Detective" commit="94716be70efdf3f420d26e70268207862f1deaf6">
+<index version="1" name="ProducerApps" commit="4f7ddd5c86eedb3f3ef410e94ddc8f9341f3ca08">
   <category name="Items Editing">
     <reapack name="ReapDetective.lua" type="script" desc="Reap Detective: Beat Detective-style multitrack drum editing">
       <metadata>
@@ -16,7 +16,7 @@
 {\pard \ql \f0 \sa180 \li0 \fi0 Requires {\b ReaImGui} and {\b js_ReaScriptAPI} (both in the ReaTeam Extensions repository).\par}
 }
 ]]></description>
-        <link rel="website">https://github.com/olsoda/reap-detective</link>
+        <link rel="website">https://github.com/olsoda/producerapps-reaper/blob/main/docs/reap-detective.md</link>
       </metadata>
       <version name="0.1.0" author="ProducerApps" time="2026-10-09T03:44:49Z">
         <changelog><![CDATA[Initial release.]]></changelog>
@@ -37,4 +37,17 @@
       </version>
     </reapack>
   </category>
+  <metadata>
+    <description><![CDATA[{\rtf1\ansi\deff0{\fonttbl{\f0 \fswiss Helvetica;}{\f1 \fmodern Courier;}}
+{\colortbl;\red255\green0\blue0;\red0\green0\blue255;}
+\widowctrl\hyphauto
+
+{\pard \ql \f0 \sa180 \li0 \fi0 \outlinelevel0 \b \fs36 ProducerApps\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 REAPER tools by ProducerApps.\par}
+{\pard \ql \f0 \sa0 \li360 \fi-360 \bullet \tx360\tab {\b Reap Detective}: Beat Detective-style multitrack drum editing. Detect hits on the key tracks, separate every track at them, quantize with review flags, and smooth with crossfades placed before each transient.\sa180\par}
+{\pard \ql \f0 \sa180 \li0 \fi0 Documentation: https://github.com/olsoda/producerapps-reaper\par}
+}
+]]></description>
+    <link rel="website">https://github.com/olsoda/producerapps-reaper</link>
+  </metadata>
 </index>
